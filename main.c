@@ -83,11 +83,11 @@ void dht22_timer_a (void) {
                 dht22_int_temp = dht22_processing & 0x0000FF0000 >> 8 * 2;      // Reads temperature
                 dht22_dec_temp = dht22_processing & 0x000000FF00 >> 8;
 
-                dht22_processing = dht22_processing & 0x00000000FF;             // Reads checksum
+                dht22_last_time = dht22_processing & 0x00000000FF;              // Reads checksum ("last_time" variable is used)
 
                 if (dht22_int_rh + dht22_dec_rh +
                         dht22_int_temp + dht22_dec_temp
-                                != dht22_processing) {                          // Computes checksum
+                                != dht22_last_time) {                           // Computes checksum
                     P1DIR |= BIT0;                                              // Error: misread values, glows the 1.0 red led
                     P1SEL &= ~BIT0;
                     P1OUT |= BIT0;
