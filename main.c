@@ -15,65 +15,64 @@ unsigned short dht22_last_time;
 
 unsigned long long dht22_processing = 0;
 
-char dht22_int_rh = -1;
-char dht22_dec_rh = -1;
+char dht22_int_rh = 0xff;
+char dht22_dec_rh = 0xff;
 
-char dht22_int_temp = -1;
-char dht22_dec_temp = -1;
+char dht22_int_temp = 0xff;
+char dht22_dec_temp = 0xff;
 
 
 void dht22_read (void) {
+    __enable_interrupt();
+
     dht22_state = DHT22_START_SIGNAL;
 
     dht22_processing = 1;                                                       // Resets the stream with "communication-end-bit" set
 
-    P1DIR |= BIT2;                                                              // 1.2 as output
-    P1SEL &= ~BIT2;                                                             // Disables default behavior
-    P1OUT &= ~BIT2;                                                             // Sets 1.2 low
+    // Outs a low signal on 1.2
+    P1DIR |= BIT2;
+    P1SEL &= ~BIT2;
+    P1OUT &= ~BIT2;
 
-    TA0CTL = TASSEL_2 | MC_2 | ID_0;                                            // Sets the timer to run each 1 microsecond
-    TA0CCR1 = 1000;                                                             // Counts 1ms
+    TA0CCTL1 = CCIE;    // Enables interrupts
+    TA0CCTL1 &= ~CAP;   // Disables capturing mode
+    TA0CCTL1 &= ~CCIFG; // Clears interrupt flag
 
-    TA0CCTL1 &= ~CAP;                                                           // Disables capture mode
-    TA0CCTL1 &= ~CCIFG;                                                         // Disables interrupt flag
-    TA0CCTL1 |= CCIE;                                                           // Enables interrupts
+    TA0CTL = TACLR;                  // Clears current timer value
+    TA0CTL = TASSEL_2 | MC_2 | ID_0; // Timer settings to run every microsecond
+    TA0CTL &= ~TAIE;                 // No interrupt for overflow
+    TA0CCR1 = 5000;                  // 5000us = 5ms
 }
 
-#pragma vector=TIMER0_A0_VECTOR
+#pragma vector=TIMER0_A1_VECTOR
 void dht22_timer_a (void) {
-    TA0CCTL1 &= ~CCIFG;
-
-    switch (state) {
+    switch (dht22_state) {
     case DHT22_START_SIGNAL:
         dht22_state = DHT22_DATA_PREPARATION;
 
-        P1DIR &= ~BIT2;                                                         // 1.2 as input
-        P1REN &= ~BIT2;                                                         // Disables input resistors
-        P1SEL |= BIT2;                                                          // Enables special behavior for capturing
+        P1REN |= BIT2;  // Enables input resistor
+        P1OUT |= BIT2;  // Pull-up resistor
+        P1DIR &= ~BIT2; // 1.2 as input
+        P1SEL |= BIT2;  // Special behavior, link with Timer_A0.1
 
-        TA0CCTL1 |= CAP;                                                        // Enables capture mode for TA0.1
-        TA0CCTL1 |= CCIS_0;                                                     // Selects CCIxA input (attached to 1.2)
-        TA0CCTL1 |= SCS;                                                        // Sync captured input with clock (recommended)
-
-        TA0CCTL1 |= CM_1;                                                       // Captures on rising edge
+        // Sets timer to capture on rising edge, on CCIxA (linked to 1.2 port)
+        TA0CCTL1 = CAP | CM_3 | CCIS_0 | SCS | CCIE;
         break;
 
     case DHT22_DATA_PREPARATION:
         dht22_state = DHT22_DATA_STREAM;
-
-        TA0CCTL1 |= CM_1;                                                       // Captures on rising edge
         break;
-    }
 
     case DHT22_DATA_STREAM:
         if (TA0CCTL1 & CM_2) {                                                  // If was capturing on falling edge
-            dht22_last_time = TA0CCR1 - last_time;                              // Gets time difference
+            dht22_last_time = TA0CCR1 - dht22_last_time;                        // Gets time difference
+
+            dht22_processing <<= 1;                                             // Shifts the stream of 1 bit to the left
             if (dht22_last_time >= 70) {                                        // Reads a "1"
                 dht22_processing |= 1;
             }
-            dht22_processing <<= 1;                                             // Shifts the stream of 1 bit to the left
 
-            if (processing & 0x010000000000) {                                  // If end of communication has been reached
+            if (dht22_processing & 0x010000000000) {                            // If end of communication has been reached
                 dht22_state = DHT22_IDLE;
                 TA0CTL = MC_0;                                                  // Stops timer
 
@@ -95,13 +94,16 @@ void dht22_timer_a (void) {
                     dht22_processing = 0;                                       // If all gone well, "processing" variable is 0
                 }
             } else {                                                            // If end of communication hasn't been reached
-                TA0CCTL1 |= CM_1;                                               // Waits for another bit
+                TA0CCTL1 = CAP | CM_1 | CCIS_0 | SCS | CCIE;
             }
         } else {
             dht22_last_time = TA0CCR1;                                          // Saves the current timestamp
-            TA0CCTL1 |= CM_2;                                                   // Captures on falling edge
+            TA0CCTL1 = CAP | CM_2 | CCIS_0 | SCS | CCIE;
         }
         break;
+    }
+
+    TA0CCTL1 &= ~CCIFG;
 }
 
 int main (void) {
@@ -109,13 +111,16 @@ int main (void) {
     dht22_read();
 
     // Wait until the library has finished processing dht22 signal
-    while (dht22_processing);
+    while (dht22_processing) {};
 
     // Here you can read the variables:
     // dht22_int_temp
     // dht22_dec_temp
     // dht22_int_rh
     // dht22_dec_rh
+
+    // End
+    while (1);
 
     return 0;
 }
