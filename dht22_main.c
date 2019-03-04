@@ -1,5 +1,6 @@
 #include "dht22.h"
 
+#ifdef DHT22_TEST
 int main (void) {
     unsigned int error;
     int rh, temperature;
@@ -16,3 +17,4 @@ int main (void) {
 
     return 0;
 }
+#endif
