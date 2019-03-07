@@ -2,14 +2,20 @@
 #define CIRCULAR_BUFFER_H_
 
 class CircularBuffer {
-    int size;
+private:
+    unsigned int size;
     int write_position;
     int read_position;
-    int count;
+    unsigned int count;
     unsigned char *buffer;
 
+public:
     CircularBuffer(int size);
     ~CircularBuffer();
+
+    unsigned int get_count();
+
+    unsigned int get_size();
 
     bool is_full();
 

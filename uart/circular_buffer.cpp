@@ -5,11 +5,19 @@ CircularBuffer::CircularBuffer(int size) {
     this->write_position = 0;
     this->read_position = 0;
     this->count = 0;
-    this->buffer = new unsigned char[size * sizeof(unsigned char)];
+    this->buffer = new unsigned char[size];
 }
 
 CircularBuffer::~CircularBuffer() {
     delete[] this->buffer;
+}
+
+unsigned int CircularBuffer::get_size() {
+    return this->size;
+}
+
+unsigned int CircularBuffer::get_count() {
+    return this->count;
 }
 
 bool CircularBuffer::is_full() {
@@ -33,7 +41,7 @@ bool CircularBuffer::write(unsigned char element) {
 bool CircularBuffer::read(unsigned char *element) {
     if (!this->is_empty()) {
         this->count--;
-        this->buffer[this->read_position] = element;
+        *element = this->buffer[this->read_position];
         this->read_position = ++this->read_position % this->size;
         return true;
     }
