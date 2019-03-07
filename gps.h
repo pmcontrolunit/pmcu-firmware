@@ -1,0 +1,5 @@
+
+namespace Gps {
+
+    void read();
+}
