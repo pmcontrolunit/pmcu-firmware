@@ -40,15 +40,16 @@ int uart_read(unsigned char *buffer, unsigned int buffer_length) {
     return 0;
 }
 
-int uart_read_until(unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_length) {
+int uart_read_until(unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length) {
     unsigned int sample_i = 0;
 
-    unsigned int buffer_i = 0;
+    unsigned int buffer_i = buffer_offset;
     unsigned char fallback = 0;
 
     // If buffer isn't defined, points to 1 byte, so "buffer_length" is 1
     if (!buffer) {
         buffer = &fallback;
+        buffer_offset = 0;
         buffer_length = 1;
     }
 
@@ -65,7 +66,7 @@ int uart_read_until(unsigned char *sample, unsigned int sample_length, unsigned 
             break;
         }
 
-        buffer_i = (buffer_i + 1) % buffer_length;
+        buffer_i = ((buffer_i + 1) % buffer_length) + buffer_offset;
     }
     return 0;
 }

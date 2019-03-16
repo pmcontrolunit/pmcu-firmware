@@ -23,11 +23,11 @@ int uart_read(unsigned char *buffer, unsigned int buffer_length);
 /*
  * Reads from UART RX port until the "sample", of some "sample_length" is matched.
  *
- * Writes the bytes on the parameter "buffer" and if the "buffer_length" is exceeded,
- * goes back and replaces old values.
+ * Writes the bytes on the parameter "buffer", starting from "buffer_offset" index.
+ * If the "buffer_length" is exceeded, goes back and replaces old values.
  *
  * Returns 0 if all goes well.
  */
-int uart_read_until(unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_length);
+int uart_read_until(unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length);
 
 #endif
