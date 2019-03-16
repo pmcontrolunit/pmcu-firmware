@@ -1,29 +1,23 @@
 #ifndef CIRCULAR_BUFFER_H_
 #define CIRCULAR_BUFFER_H_
 
-class CircularBuffer {
-private:
-    unsigned int size;
-    int write_position;
-    int read_position;
+#define CIRCULAR_BUFFER_DATA_SIZE 256
+
+typedef struct {
     unsigned int count;
-    unsigned char *buffer;
+    unsigned int write_position;
+    unsigned int read_position;
+    unsigned char data[CIRCULAR_BUFFER_DATA_SIZE];
+} circular_buffer;
 
-public:
-    CircularBuffer(int size);
-    ~CircularBuffer();
+void circular_buffer_init(circular_buffer *buffer);
 
-    unsigned int get_count();
+int circular_buffer_is_empty(circular_buffer *buffer);
 
-    unsigned int get_size();
+int circular_buffer_is_full(circular_buffer *buffer);
 
-    bool is_full();
+int circular_buffer_write(circular_buffer *buffer, unsigned char element);
 
-    bool is_empty();
-
-    bool write(unsigned char element);
-
-    bool read(unsigned char *element);
-};
+int circular_buffer_read(circular_buffer *buffer, unsigned char *element);
 
 #endif

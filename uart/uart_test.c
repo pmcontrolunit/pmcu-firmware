@@ -1,5 +1,5 @@
-#include "uart.h"
 #include <msp430.h>
+#include "uart.h"
 
 /*
 unsigned char received[1000];
@@ -7,9 +7,9 @@ unsigned char received[1000];
 int main() {
     WDTCTL = WDTPW | WDTHOLD;
 
-    Uart::init();
+    uart_init();
 
-    Uart::read(received, 1000);
+    uart_read(received, 1000);
 
     return 0;
 }
