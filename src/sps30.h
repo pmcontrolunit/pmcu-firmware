@@ -5,18 +5,25 @@
  *      Author: Alessandro
  */
 
-#define START 0x00
-#define STOP 0x01
-#define READ 0x03
-#define CLEAN 0x56
-#define INFO 0xD0
-#define RESET 0xD3
+/*
+ This must be used as the very first command.
+ It switches the state of SPS30 from IDLE-MODE to MEASURING-MODE.
+ */
+int start_measurement();
 
-#define ADDRESS 0x00
+/*
+ This should be used as the second command.
+ Receive the confirm of switching the state.
+ */
+unsigned char* read_start_ack();
 
-#define START_BYTE 0x7E
-#define STOP_BYTE 0x7E
+/*
+ This command turns the state of SPS30 to IDLE-MODE, which uses less power
+ */
+int stop_measurement();
 
-int checksum(int*, int);
-int* complete_packet(int*, int);
-unsigned char* parse_packet(int*, int);
+/*
+ This should be used to receive confirm of switching the state to IDLE-MODE, after stopping the measurement
+ */
+unsigned char* read_stop_ack();
+

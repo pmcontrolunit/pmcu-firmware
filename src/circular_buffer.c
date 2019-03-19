@@ -1,35 +1,62 @@
+/*
+ * circular_buffer.c
+ *
+ *  Created on: 17/ago/2015
+ *      Author: Paolo Santinelli
+ */
+
+
+//--------------------------------------------------------------------------------------
+#include <stdlib.h>
 #include "circular_buffer.h"
+/* Circular buffer */
+//typedef struct {                                        /* Circular buffer struct */
+//    int                 size;   /* maximum number of elements         */
+//    int                 w_pos;  /* write index                        */
+//    int                 r_pos;  /* read index			        */
+//    int                 count;  /* number of items in the buffer      */
+//    unsigned char       *buff;  /* vector of elements                 */
+//} CircularBuffer;
 
-void circular_buffer_init(circular_buffer *buffer) {
-    buffer->count = 0;
-    buffer->write_position = 0;
-    buffer->read_position = 0;
+void cbInit(CircularBuffer *cb, int size) {             /* Inizialize circular buffer */
+    cb->size  = size;
+    cb->w_pos = 0;
+    cb->r_pos = 0;
+    cb->count = 0;
+    cb->buff  = (unsigned char *)malloc(cb->size*sizeof(unsigned char));
 }
 
-int circular_buffer_is_empty(circular_buffer *buffer) {
-    return buffer->count == 0;
+void cbFree(CircularBuffer *cb) {                       /* Free circular buffer */
+    free(cb->buff); /* OK if null */
 }
 
-int circular_buffer_is_full(circular_buffer *buffer) {
-    return buffer->count == CIRCULAR_BUFFER_DATA_SIZE;
+int cbIsFull(CircularBuffer *cb) {                      /* Check circular buffer full condition */
+    return cb->count == cb->size;
 }
 
-int circular_buffer_write(circular_buffer *buffer, unsigned char element) {
-    if (!circular_buffer_is_full(buffer)) {
-        buffer->count++;
-        buffer->data[buffer->write_position] = element;
-        buffer->write_position = (buffer->write_position + 1) % CIRCULAR_BUFFER_DATA_SIZE;
-        return 1;
+int cbIsEmpty(CircularBuffer *cb) {                     /* Check circular buffer empty condition */
+    return cb->count == 0;
+}
+
+int cbWrite(CircularBuffer *cb, unsigned char elem) {   /* Write data in to circular buffer */
+
+    if (cb->count < cb->size){
+          cb->count ++;
+          cb->buff[cb->w_pos] = elem;
+          cb->w_pos = ++cb->w_pos < cb->size ? cb->w_pos: 0; // cb->w_pos = (cb->w_pos+1) % cb->size;
+          return(0); // Done
     }
-    return 0;
+  return(1); // TX buffer full
 }
 
-int circular_buffer_read(circular_buffer *buffer, unsigned char *element) {
-    if (!circular_buffer_is_empty(buffer)) {
-        buffer->count--;
-        *element = buffer->data[buffer->read_position];
-        buffer->read_position = (buffer->read_position + 1) % CIRCULAR_BUFFER_DATA_SIZE;
-        return 1;
+int cbRead(CircularBuffer *cb, unsigned char *elem) {   /* Read data from circular buffer */
+    if (cb->count > 0){
+          cb->count --;
+          *elem = cb->buff[cb->r_pos];
+          cb->r_pos = ++cb->r_pos < cb->size ? cb->r_pos: 0; // cb->r_pos = (cb->r_pos+1) % cb->size;
+          return(0); // Done
     }
-    return 0;
+  return(1); // RX buffer empty
 }
+//------------------------------------------------------------------------------------
+

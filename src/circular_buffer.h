@@ -1,23 +1,26 @@
+/*
+ * circular_buffer.h
+ *
+ *  Created on: 17/ago/2015
+ *      Author: Paolo Santinelli
+ */
+
 #ifndef CIRCULAR_BUFFER_H_
 #define CIRCULAR_BUFFER_H_
 
-#define CIRCULAR_BUFFER_DATA_SIZE 256
+typedef struct {                                        /* Circular buffer struct */
+    int                 size;   /* maximum number of elements           */
+    int                 w_pos;  /* write index                          */
+    int                 r_pos;  /* read index				*/
+    int                 count;  /* number of items in the buffer        */
+    unsigned char       *buff;  /* vector of elements                   */
+} CircularBuffer;
 
-typedef struct {
-    unsigned int count;
-    unsigned int write_position;
-    unsigned int read_position;
-    unsigned char data[CIRCULAR_BUFFER_DATA_SIZE];
-} circular_buffer;
+void cbInit(CircularBuffer *cb, int size);
+void cbFree(CircularBuffer *cb);
+int cbIsFull(CircularBuffer *cb);
+int cbIsEmpty(CircularBuffer *cb);
+int cbWrite(CircularBuffer *cb, unsigned char elem);
+int cbRead(CircularBuffer *cb, unsigned char *elem);
 
-void circular_buffer_init(circular_buffer *buffer);
-
-int circular_buffer_is_empty(circular_buffer *buffer);
-
-int circular_buffer_is_full(circular_buffer *buffer);
-
-int circular_buffer_write(circular_buffer *buffer, unsigned char element);
-
-int circular_buffer_read(circular_buffer *buffer, unsigned char *element);
-
-#endif
+#endif /* CIRCULAR_BUFFER_H_ */

@@ -3,7 +3,7 @@
 
 #include "uart.h"
 #include "gps.h"
-
+/*
 int main() {
     unsigned char buffer[1024];
 
@@ -16,3 +16,4 @@ int main() {
 
     while (1);
 }
+*/
