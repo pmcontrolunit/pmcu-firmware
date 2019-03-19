@@ -3,6 +3,11 @@
 
 #define WRITE_BUFFER_CAPACITY 20
 
+enum Setting {
+    SPS30,
+    DHT22
+};
+
 void uart_init();
 
 /*
