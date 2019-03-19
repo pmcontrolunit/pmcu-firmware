@@ -3,7 +3,9 @@
 
 #define WRITE_BUFFER_CAPACITY 20
 
-void uart_init();
+void uart_init_9600();
+
+void uart_init_115200();
 
 /*
  * Writes the given "buffer", of some "buffer_length", to UART TX through a write_buffer.
