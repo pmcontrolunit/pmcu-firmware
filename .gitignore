@@ -1,7 +1,11 @@
-# Read here for more info about the files to check in:
-# http://processors.wiki.ti.com/index.php/Source_control_with_CCS
-
-Debug
+# We don't want CCS files to be pushed on GIT.
 .xdchelp
 .config
 .launches
+.settings
+Debug
+targetConfigs
+.ccsproject
+.cproject
+.project
+lnk_*.cmd
