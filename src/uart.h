@@ -4,6 +4,15 @@
 #include "circular_buffer.h"
 #include <msp430.h>
 
+/* -------------
+ * UART MODULES:
+ * -------------
+ * On MSP430F5529 there are 2 USCI modules: A0 and A1.
+ * - A0 on UART mode, ends on 3.3 and 3.4 pins.
+ * - A1 on UART mode ends on 4.4 and 4.5 pins, linked with USB serial.
+ */
+typedef unsigned short uart_module;
+
 #define uart_a0 0x05C0
 #define uart_a1 0x0600
 
@@ -24,6 +33,14 @@
 
 #define uart_register(module, offset) *((unsigned char *) module + offset)
 
+/* --------------
+ * UART SETTINGS:
+ * --------------
+ * A single byte that contains all configurable parts of UART communication (matching with UCAxCTL0 register).
+ * The last 3 bits (lsb) are used for baud-rate configuration.
+ */
+typedef unsigned char uart_settings;
+
 #define uart_parity_enabled UCPEN
 #define uart_even_parity    UCPAR
 #define uart_msb_first      UCMSB
@@ -33,34 +50,16 @@
 #define uart_baud_rate_9600   0b000
 #define uart_baud_rate_115200 0b001
 
-typedef unsigned short uart_module;
-typedef unsigned char uart_settings;
-
+/*
+ * Applies the settings to the module, initialize read/write buffers and
+ * sets up output pins.
+ */
 void uart_setup(uart_module module, uart_settings settings);
 
-/*
- * Writes the given "buffer", of some "buffer_length", to UART TX through a write_buffer.
- *
- * Returns 0 if all goes well.
- */
 int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length);
 
-/*
- * Reads from UART RX port until the "buffer", of some "buffer_length", is filled up.
- *
- * Returns 0 if all goes well.
- * Could return 1 in case of time-out.
- */
 int uart_read(uart_module module, unsigned char *buffer, unsigned int buffer_length);
 
-/*
- * Reads from UART RX port until the "sample", of some "sample_length" is matched.
- *
- * Writes the bytes on the parameter "buffer", starting from "buffer_offset" index.
- * If the "buffer_length" is exceeded, goes back and replaces old values.
- *
- * Returns 0 if all goes well.
- */
 int uart_read_until(uart_module module, unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length);
 
 #endif
