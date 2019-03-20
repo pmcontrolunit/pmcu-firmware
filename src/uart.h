@@ -58,6 +58,8 @@ void uart_setup(uart_module module, uart_settings settings);
 
 int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length);
 
+int uart_write_str(uart_module module, unsigned char *str);
+
 int uart_read(uart_module module, unsigned char *buffer, unsigned int buffer_length);
 
 int uart_read_until(uart_module module, unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length);

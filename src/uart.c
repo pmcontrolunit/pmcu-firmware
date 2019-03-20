@@ -76,6 +76,14 @@ int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_le
     return 0;
 }
 
+int uart_write_str(uart_module module, unsigned char *str) {
+    unsigned i = 0;
+    while (str[i] != '\0') {
+        uart_write(module, &str[i++], 1);
+    }
+    return 0;
+}
+
 int uart_read(uart_module module, unsigned char *buffer, unsigned int buffer_length) {
     circular_buffer *read_buffer = module == uart_a0 ? &read_buffer_a0 : &read_buffer_a1;
     unsigned int i;
