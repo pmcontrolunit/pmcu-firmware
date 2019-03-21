@@ -1,3 +1,5 @@
+#include "uart.h"
+
 /*
  * sps30.h
  *
@@ -15,7 +17,7 @@ int start_measurement();
  This should be used as the second command.
  Receive the confirm of switching the state.
  */
-unsigned char* read_start_ack();
+int read_start_ack();
 
 /*
  This command turns the state of SPS30 to IDLE-MODE, which uses less power
@@ -25,5 +27,8 @@ int stop_measurement();
 /*
  This should be used to receive confirm of switching the state to IDLE-MODE, after stopping the measurement
  */
-unsigned char* read_stop_ack();
+int read_stop_ack();
 
+int ask_measured_values();
+
+int read_measured_values();

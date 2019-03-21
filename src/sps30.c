@@ -1,5 +1,4 @@
 #include <msp430.h>
-#include "uart.h"
 #include "sps30.h"
 
 //MSP to SPS30 packet structure
@@ -43,70 +42,79 @@
 int checksum(int*, int);
 int* complete_packet(int*, int);
 unsigned char* parse_packet(int*, int);
+int array_copy(unsigned char*, unsigned char*, int);
 
+int overclock();
+
+unsigned char write[8];
+unsigned char read[50];
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
     uart_init(SPS30);
+
+    start_measurement();
+    read_start_ack();
+
+    ask_measured_values();
+    read_measured_values();
+
+    stop_measurement();
+    read_stop_ack();
+
     while(1);
 }
-
 //COMMANDS
 
+
 int start_measurement() {
-    int array[] = {START_BYTE, ADDRESS, START, 0x02, 0x01, 0x03};
-    int packet[] = complete_packet(array, 6)
-    int length = 8;
-    uart_write(parse_packet(packet, length), length);
+    unsigned char array[] = {0x7E, 0x00, 0x00, 0x02, 0x01, 0x03, 0xF9, 0x7E};
+    uart_write(array, 8);
+    array_copy(write, array, 8);
     return 0;
 }
 
-unsigned char* read_start_ack() {
-    unsigned char array[7];
-    uart_read(array, 7);
-    return array;
+int read_start_ack() {
+    uart_read(read, 7);
+    return 0;
 }
 
 int stop_measurement() {
-    int array[] = {START_BYTE, ADDRESS, STOP, 0x00};
-    int packet[] = complete_packet(array, 4);
-    int length = 6;
-    uart_write(parse_packet(packet, length), length);
+    unsigned char array[] = {0x7E, 0x00, 0x01, 0x00, 0xFE, 0x7E};
+    uart_write(array, 6);
+    array_copy(write, array, 6);
     return 0;
 }
 
-unsigned char* read_stop_ack() {
+int read_stop_ack() {
     return read_start_ack();
 }
 
 int ask_measured_values() {
-    int array[] = {START_BYTE, ADDRESS, READ, 0x00};
-    int packet[] = complete_packet(array, 4);
-    int length = 6;
-    uart_write(parse_packet(packet, length), length);
+    unsigned char array[] = {0x7E, 0x00, 0x03, 0x00, 0xFC, 0x7E};
+    uart_write(array, 6);
+    array_copy(write, array, 6);
     return 0;
 }
 
-unsigned char* read_measured_values() {
-    unsigned char array[47];
-    uart_read(array, 47);
-    return array;
+int read_measured_values() {
+    uart_read(read, 47);
+    return 0;
 }
 
 //TODO: check if length is right
 int ask_cleaning_interval() {
-    int array[] = {START_BYTE, ADDRESS, INFO_CLEAN, 0x01, 0x00, 0x7D};
-    int packet[] = complete_packet(array, 6);
-    int length = 8;
-    uart_write(parse_packet(packet, length), length);
+    unsigned char array[] = {0x7E, 0x00, 0x80, 0x01, 0x00, 0x7D, 0x5E, 0x7E};
+    uart_write(array, 8);
+    array_copy(write, array, 8);
     return 0;
 }
 
-unsigned char* read_cleaning_interval() {
+int read_cleaning_interval() {
     unsigned char array[11];
     uart_read(array, 11);
-    return array;
+    return 0;
 }
 
 
@@ -126,12 +134,12 @@ int checksum(int* bytes, int length) {
 //return a packet with length+2 with checksum and stop byte
 int* complete_packet(int* bytes, int length) {
     int packet[length + 2];
-    int i;
+    unsigned int i;
 
     for(i = 0; i < length; i++)
         packet[i] = bytes[i];
 
-    packet[++i] = checksum(bytes);
+    packet[++i] = checksum(bytes, length);
     packet[++i] = STOP_BYTE;
 
     return packet;
@@ -148,4 +156,9 @@ unsigned char* parse_packet(int* bytes, int length) {
     return packet;
 }
 
-
+int array_copy(unsigned char* dst, unsigned char* src, int length) {
+    unsigned int i;
+    for(i = 0; i < length; i++)
+        dst[i] = src[i];
+    return 0;
+}
