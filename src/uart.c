@@ -13,25 +13,7 @@ void uart_set_baud_rate_9600(uart_module module) {
     uart_register(module, uart_mctl) = UCBRS_3 + UCBRF_0;
 }
 
-void uart_set_baud_rate_115200(uart_module module) {
-    // ** SMCLK/MCLK overclocking to 12MHz **
-
-    UCSCTL3 |= SELREF_2;     // Set DCO FLL reference = REFO
-    __bis_SR_register(SCG0); // Disable the FLL control loop
-    UCSCTL0 = 0x0000;        // Set lowest possible DCOx, MODx
-    UCSCTL1 = DCORSEL_5;     // Select DCO range 24MHz operation
-    UCSCTL2 = FLLD_1 + 374;  // Set DCO Multiplier for 12MHz
-                             // (N + 1) * FLLRef = Fdco
-                             // (374 + 1) * 32768 = 12MHz
-                             // Set FLL Div = fDCOCLK/2
-    __bic_SR_register(SCG0); // Enable the FLL control loop
-
-    // Worst-case settling time for the DCO when the DCO range bits have been
-    // changed is n x 32 x 32 x f_MCLK / f_FLL_reference. See UCS chapter in 5xx
-    // UG for optimization.
-    // 32 x 32 x 12 MHz / 32,768 Hz = 375000 = MCLK cycles for DCO to settle
-    __delay_cycles(375000);
-
+void uart_set_baud_rate_115200_12mhz(uart_module module) {
     uart_register(module, uart_ctl1) |= UCSSEL_2;
     uart_register(module, uart_br0) = 104;
     uart_register(module, uart_br1) = 0;
@@ -45,8 +27,8 @@ void uart_setup(uart_module module, uart_settings settings) {
         case uart_baud_rate_9600:
             uart_set_baud_rate_9600(module);
             break;
-        case uart_baud_rate_115200:
-            uart_set_baud_rate_115200(module);
+        case uart_baud_rate_115200_12mhz:
+            uart_set_baud_rate_115200_12mhz(module);
             break;
         default:
             break; // error
@@ -67,11 +49,11 @@ void uart_setup(uart_module module, uart_settings settings) {
     uart_register(module, uart_ie) |= UCRXIE;
 }
 
-int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length) {
+int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length) {
     unsigned int i;
     for (i = 0; i < buffer_length; i++) {
         while (!(uart_register(module, uart_ifg) & UCTXIFG));
-        uart_register(module, uart_txbuf) = buffer[i];
+        uart_register(module, uart_txbuf) = buffer[i + buffer_offset];
     }
     return 0;
 }
@@ -79,7 +61,7 @@ int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_le
 int uart_write_str(uart_module module, unsigned char *str) {
     unsigned i = 0;
     while (str[i] != '\0') {
-        uart_write(module, &str[i++], 1);
+        uart_write(module, &str[i++], 0, 1);
     }
     return 0;
 }
@@ -88,6 +70,7 @@ int uart_read(uart_module module, unsigned char *buffer, unsigned int buffer_len
     circular_buffer *read_buffer = module == uart_a0 ? &read_buffer_a0 : &read_buffer_a1;
     unsigned int i;
     for (i = 0; i < buffer_length; i++) {
+
         while (circular_buffer_is_empty(read_buffer));
         circular_buffer_read(read_buffer, &buffer[i]);
     }

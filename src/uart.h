@@ -48,7 +48,10 @@ typedef unsigned char uart_settings;
 #define uart_stop_bit       UCSPB
 
 #define uart_baud_rate_9600   0b000
-#define uart_baud_rate_115200 0b001
+
+#define uart_baud_rate_115200_32khz 0b100
+#define uart_baud_rate_115200_1mhz  0b101
+#define uart_baud_rate_115200_12mhz 0b110
 
 /*
  * Applies the settings to the module, initialize read/write buffers and
@@ -56,7 +59,7 @@ typedef unsigned char uart_settings;
  */
 void uart_setup(uart_module module, uart_settings settings);
 
-int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length);
+int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length);
 
 int uart_write_str(uart_module module, unsigned char *str);
 
