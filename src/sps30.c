@@ -42,7 +42,18 @@
 int array_copy(unsigned char*, unsigned char*, int);
 
 unsigned char write[8];
-unsigned char read[50];
+unsigned char read[47];
+
+unsigned char v_mass_PM1[4];
+unsigned char v_mass_PM2dot5[4];
+unsigned char v_mass_PM4[4];
+unsigned char v_mass_PM10[4];
+unsigned char v_num_PM0dot5[4];
+unsigned char v_num_PM1[4];
+unsigned char v_num_PM2dot5[4];
+unsigned char v_num_PM4[4];
+unsigned char v_num_PM10[4];
+unsigned char v_typical_size[4];
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
@@ -56,6 +67,17 @@ int main(void) {
     sps30_ask_measured_values();
     sps30_read_measured_values(read);
 
+    sps30_get_measure(v_mass_PM1, read, mass_PM1);
+    sps30_get_measure(v_mass_PM2dot5, read, mass_PM2dot5);
+    sps30_get_measure(v_mass_PM4, read, mass_PM4);
+    sps30_get_measure(v_mass_PM10, read, mass_PM10);
+    sps30_get_measure(v_num_PM0dot5, read, num_PM0dot5);
+    sps30_get_measure(v_num_PM1, read, num_PM1);
+    sps30_get_measure(v_num_PM2dot5, read, num_PM2dot5);
+    sps30_get_measure(v_num_PM4, read, num_PM4);
+    sps30_get_measure(v_num_PM10, read, num_PM10);
+    sps30_get_measure(v_typical_size, read, typical_size);
+
     sps30_start_fan_cleaning();
     sps30_read_fan_ack(read);
 
@@ -65,7 +87,6 @@ int main(void) {
     while(1);
 }
 //COMMANDS
-
 
 int sps30_start_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x00, 0x02, 0x01, 0x03, 0xF9, 0x7E};
@@ -135,5 +156,16 @@ int array_copy(unsigned char* dst, unsigned char* src, int length) {
     unsigned int i;
     for(i = 0; i < length; i++)
         dst[i] = src[i];
+    return 0;
+}
+
+int sps30_get_measure(unsigned char buff[], unsigned char measures[], Measure measure) {
+    unsigned int i, j;
+
+    j = 5 + 4*measure;
+
+    for(i = 0; i < 4; i++, j++)
+        buff[i] = measures[j];
+
     return 0;
 }
