@@ -1,76 +1,82 @@
 #include <msp430.h>
 #include "uart.h"
 
-int main () {
-    unsigned char command[64];
-    unsigned int i;
-    unsigned char byte;
+void init_12mhz_mclk() {
+    UCSCTL3 |= SELREF_2;
 
-    __bis_SR_register(GIE);
+    __bis_SR_register(SCG0);
+    UCSCTL0 = 0x0000;
+    UCSCTL1 = DCORSEL_5;
+    UCSCTL2 = FLLD_1 + 374;
+    __bic_SR_register(SCG0);
+
+    __delay_cycles(375000);
+}
+
+int main () {
+    unsigned char buffer[128];
+    unsigned int i, j;
 
     WDTCTL = WDTPW | WDTHOLD;
 
-    // sets up pins serial and usb serial
-    uart_setup(uart_a0, uart_baud_rate_115200);
-    uart_setup(uart_a1, uart_baud_rate_115200);
+    // init 12mhz clock, needed for 115200 baud-rate communication
+    init_12mhz_mclk();
+
+    __bis_SR_register(GIE);
+
+    uart_setup(uart_a0, uart_baud_rate_115200_12mhz);
+    uart_setup(uart_a1, uart_baud_rate_115200_12mhz);
 
     while (1) {
-        uart_write_str(uart_a1, "Synchronizing with DCE, please wait...\n");
-        uart_write_str(uart_a0, "AT\r");
+        uart_write_str(uart_a1, "Insert AT command (type and press enter):\r\n");
 
-        uart_read(uart_a0, &byte, 1);
-        if (byte == 'O' || byte == 'o') {
-            uart_read(uart_a0, &byte, 1);
-            if (byte == 'K' || byte == 'k') {
+        // Reads command and sends it to DCE, silently.
+        i = 0;
+        while (1) {
+            uart_read(uart_a1, &buffer[i], 1);
+            if (buffer[i] == '\r') {
+                break;
+            }
+            i++;
+        }
+        uart_write(uart_a0, buffer, 0, i + 1);
+
+        /*
+        // Since DCE echoes input command, writes it back.
+        i = 0;
+        while (1) {
+            uart_read(uart_a0, &buffer[i], 1);
+            uart_write(uart_a1, &buffer[i], 0, 1);
+
+            if (buffer[i] == '\r') {
+                break;
+            }
+            i++;
+        }
+        uart_write_str(uart_a1, "\n");
+
+        // Prints DCE response, format is: <CR><LF>response<CR><LF>
+        i = 0;
+        while (1) {
+            uart_read(uart_a0, &buffer[i], 1);
+            if (buffer[i] == '\r' || i > 0) {
+                uart_write(uart_a0, &buffer[i], 0, 1);
+                i++;
+            }
+            if (buffer[i] == '\n' && i > 1) {
                 break;
             }
         }
+        */
 
-        uart_write_str(uart_a1, "Something received but not expected:\n");
-        uart_write(uart_a1, byte, 1);
-        uart_write_str(uart_a1, "\n");
-    }
-    uart_write_str(uart_a1, "Synchronization done!");
-
-    while (1) {
-          uart_write_str(uart_a1, "Insert a command:\n");
-
-          // reads next incoming command - a1
-          i = 0;
-          while (1) {
-              uart_read(uart_a1, &command[i], 1);
-              if (command[i] == '\r' || command[i] == '\n') {
-                  break;
-              }
-              i++;
-          }
-
-          // Prepares the command format and sends it to the modem.
-          // Commands terminates with a <CR> (\r).
-          command[i++] = '\r';
-          command[i] = '\0'; // \0 is used to detect the string length
-          uart_write_str(uart_a0, command);
-
-          uart_write_str(uart_a1, "Command wrote out of A0, waiting for a response...\n");
-
-          // waits for a response from modem - a0
-          i = 0;
-          while (1) {
-              uart_read(uart_a0, &command[i], 1);
-              if (command[i] == '\r') {
-                  i++;
-
-                  uart_read(uart_a0, &command[i], 1);
-                  if (command[i] == '\n') {
-                      break;
-                  }
-              }
-              i++;
-          }
-          command[i - 1] = '\n';
-          command[i] = '\0';
-
-          uart_write_str(uart_a1, "Response:\n");
-          uart_write_str(uart_a1, command); // writes response back to uart
+        j = 0;
+        while (j != 2) {
+            uart_read(uart_a0, &buffer[i], 1);
+            uart_write(uart_a1, &buffer[i], 0, 1);
+            if (buffer[i] == '\n') {
+                j++;
+            }
+            i++;
+        }
     }
 }
