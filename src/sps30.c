@@ -39,12 +39,7 @@
 #define START_BYTE 0x7E
 #define STOP_BYTE 0x7E
 
-int checksum(int*, int);
-int* complete_packet(int*, int);
-unsigned char* parse_packet(int*, int);
 int array_copy(unsigned char*, unsigned char*, int);
-
-int overclock();
 
 unsigned char write[8];
 unsigned char read[50];
@@ -52,109 +47,89 @@ unsigned char read[50];
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
-    uart_init(SPS30);
+    __bis_SR_register(GIE);
+    uart_setup(uart_a0, uart_baud_rate_115200);
 
-    start_measurement();
-    read_start_ack();
+    sps30_start_measurement();
+    sps30_read_start_ack(read);
 
-    ask_measured_values();
-    read_measured_values();
+    sps30_ask_measured_values();
+    sps30_read_measured_values(read);
 
-    stop_measurement();
-    read_stop_ack();
+    sps30_start_fan_cleaning();
+    sps30_read_fan_ack(read);
+
+    sps30_stop_measurement();
+    sps30_read_stop_ack(read);
 
     while(1);
 }
 //COMMANDS
 
 
-int start_measurement() {
+int sps30_start_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x00, 0x02, 0x01, 0x03, 0xF9, 0x7E};
-    uart_write(array, 8);
+    uart_write(uart_a0, array, 8);
     array_copy(write, array, 8);
     return 0;
 }
 
-int read_start_ack() {
-    uart_read(read, 7);
+int sps30_read_start_ack(unsigned char* buff) {
+    uart_read(uart_a0, read, 7);
     return 0;
 }
 
-int stop_measurement() {
+int sps30_stop_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x01, 0x00, 0xFE, 0x7E};
-    uart_write(array, 6);
+    uart_write(uart_a0, array, 6);
     array_copy(write, array, 6);
     return 0;
 }
 
-int read_stop_ack() {
-    return read_start_ack();
+int sps30_read_stop_ack(unsigned char* buff) {
+    return sps30_read_start_ack(buff);
 }
 
-int ask_measured_values() {
+
+int sps30_ask_measured_values() {
     unsigned char array[] = {0x7E, 0x00, 0x03, 0x00, 0xFC, 0x7E};
-    uart_write(array, 6);
+    uart_write(uart_a0, array, 6);
     array_copy(write, array, 6);
     return 0;
 }
 
-int read_measured_values() {
-    uart_read(read, 47);
+int sps30_read_measured_values(unsigned char* buff) {
+    uart_read(uart_a0, buff, 47);
     return 0;
 }
 
 //TODO: check if length is right
-int ask_cleaning_interval() {
+int sps30_ask_cleaning_interval() {
     unsigned char array[] = {0x7E, 0x00, 0x80, 0x01, 0x00, 0x7D, 0x5E, 0x7E};
-    uart_write(array, 8);
+    uart_write(uart_a0, array, 8);
     array_copy(write, array, 8);
     return 0;
 }
 
-int read_cleaning_interval() {
+int sps30_read_cleaning_interval() {
     unsigned char array[11];
-    uart_read(array, 11);
+    uart_read(uart_a0, array, 11);
     return 0;
 }
 
+int sps30_start_fan_cleaning() {
+    unsigned char array[] = {0x7E, 0x00, 0x56, 0x00, 0xA9, 0x7E};
+    uart_write(uart_a0, array, 6);
+    array_copy(write, array, 6);
+    return 0;
+}
+
+int sps30_read_fan_ack(unsigned char* buff) {
+    uart_read(uart_a0, buff, 7);
+    return 0;
+}
 
 //UTILS
-
-//insert array with start but without stop nor checksum
-int checksum(int* bytes, int length) {
-    int checksum = 0;
-    int i;
-
-    for(i = 1; i < length; i++)
-        checksum += bytes[i];
-
-    return checksum ^= 0xFF;
-}
-
-//return a packet with length+2 with checksum and stop byte
-int* complete_packet(int* bytes, int length) {
-    int packet[length + 2];
-    unsigned int i;
-
-    for(i = 0; i < length; i++)
-        packet[i] = bytes[i];
-
-    packet[++i] = checksum(bytes, length);
-    packet[++i] = STOP_BYTE;
-
-    return packet;
-}
-
-//parse packet from int to char array
-unsigned char* parse_packet(int* bytes, int length) {
-    unsigned char* packet;
-    int i;
-
-    for(i = 0; i < length; i++)
-        packet[i] = bytes[i] + '0';
-
-    return packet;
-}
 
 int array_copy(unsigned char* dst, unsigned char* src, int length) {
     unsigned int i;

@@ -1,6 +1,7 @@
 #include <msp430.h>
 #include "uart.h"
 
+/*
 int main () {
     unsigned char command[64];
     unsigned int i;
@@ -74,3 +75,4 @@ int main () {
           uart_write_str(uart_a1, command); // writes response back to uart
     }
 }
+*/
