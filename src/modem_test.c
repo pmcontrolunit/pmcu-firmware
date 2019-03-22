@@ -1,6 +1,7 @@
 #include <msp430.h>
 #include "uart.h"
 
+/*
 void init_12mhz_mclk() {
     UCSCTL3 |= SELREF_2;
 
@@ -13,10 +14,9 @@ void init_12mhz_mclk() {
     __delay_cycles(375000);
 }
 
-int main () {
-    unsigned char buffer[128];
-    unsigned int i, j;
+unsigned char received;
 
+int main () {
     WDTCTL = WDTPW | WDTHOLD;
 
     // init 12mhz clock, needed for 115200 baud-rate communication
@@ -27,56 +27,24 @@ int main () {
     uart_setup(uart_a0, uart_baud_rate_115200_12mhz);
     uart_setup(uart_a1, uart_baud_rate_115200_12mhz);
 
-    while (1) {
-        uart_write_str(uart_a1, "Insert AT command (type and press enter):\r\n");
+    __bis_SR_register(LPM0_bits);
 
-        // Reads command and sends it to DCE, silently.
-        i = 0;
-        while (1) {
-            uart_read(uart_a1, &buffer[i], 1);
-            if (buffer[i] == '\r') {
-                break;
-            }
-            i++;
-        }
-        uart_write(uart_a0, buffer, 0, i + 1);
+    __no_operation();
+}
 
-        /*
-        // Since DCE echoes input command, writes it back.
-        i = 0;
-        while (1) {
-            uart_read(uart_a0, &buffer[i], 1);
-            uart_write(uart_a1, &buffer[i], 0, 1);
-
-            if (buffer[i] == '\r') {
-                break;
-            }
-            i++;
-        }
-        uart_write_str(uart_a1, "\n");
-
-        // Prints DCE response, format is: <CR><LF>response<CR><LF>
-        i = 0;
-        while (1) {
-            uart_read(uart_a0, &buffer[i], 1);
-            if (buffer[i] == '\r' || i > 0) {
-                uart_write(uart_a0, &buffer[i], 0, 1);
-                i++;
-            }
-            if (buffer[i] == '\n' && i > 1) {
-                break;
-            }
-        }
-        */
-
-        j = 0;
-        while (j != 2) {
-            uart_read(uart_a0, &buffer[i], 1);
-            uart_write(uart_a1, &buffer[i], 0, 1);
-            if (buffer[i] == '\n') {
-                j++;
-            }
-            i++;
-        }
+#pragma vector=USCI_A0_VECTOR
+__interrupt void usci_a0_isr() {
+    if (UCA0IFG & UCRXIFG) {
+        while (!(UCA1IFG & UCTXIFG));
+        UCA1TXBUF = UCA0RXBUF;
     }
 }
+
+#pragma vector=USCI_A1_VECTOR
+__interrupt void usci_a1_isr() {
+    if (UCA1IFG & UCRXIFG) {
+        while (!(UCA0IFG & UCTXIFG));
+        UCA0TXBUF = UCA1RXBUF;
+    }
+}
+*/
