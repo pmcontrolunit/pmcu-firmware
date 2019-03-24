@@ -49,7 +49,7 @@ void uart_setup(uart_module module, uart_settings settings) {
     uart_register(module, uart_ie) |= UCRXIE;
 }
 
-int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length) {
+int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length, unsigned int buffer_offset) {
     unsigned int i;
     for (i = 0; i < buffer_length; i++) {
         while (!(uart_register(module, uart_ifg) & UCTXIFG));

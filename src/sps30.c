@@ -55,11 +55,27 @@ unsigned char v_num_PM4[4];
 unsigned char v_num_PM10[4];
 unsigned char v_typical_size[4];
 
+void init_12mhz_mclk() {
+    UCSCTL3 |= SELREF_2;
+
+    __bis_SR_register(SCG0);
+    UCSCTL0 = 0x0000;
+    UCSCTL1 = DCORSEL_5;
+    UCSCTL2 = FLLD_1 + 374;
+    __bic_SR_register(SCG0);
+
+    __delay_cycles(375000);
+}
+
+
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
     __bis_SR_register(GIE);
-    uart_setup(uart_a0, uart_baud_rate_115200);
+
+    init_12mhz_mclk();
+
+    uart_setup(uart_a0, uart_baud_rate_115200_12mhz);
 
     sps30_start_measurement();
     sps30_read_start_ack(read);
@@ -90,7 +106,7 @@ int main(void) {
 
 int sps30_start_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x00, 0x02, 0x01, 0x03, 0xF9, 0x7E};
-    uart_write(uart_a0, array, 8);
+    uart_write(uart_a0, array, 8, 0);
     array_copy(write, array, 8);
     return 0;
 }
@@ -102,7 +118,7 @@ int sps30_read_start_ack(unsigned char* buff) {
 
 int sps30_stop_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x01, 0x00, 0xFE, 0x7E};
-    uart_write(uart_a0, array, 6);
+    uart_write(uart_a0, array, 6, 0);
     array_copy(write, array, 6);
     return 0;
 }
@@ -114,7 +130,7 @@ int sps30_read_stop_ack(unsigned char* buff) {
 
 int sps30_ask_measured_values() {
     unsigned char array[] = {0x7E, 0x00, 0x03, 0x00, 0xFC, 0x7E};
-    uart_write(uart_a0, array, 6);
+    uart_write(uart_a0, array, 6, 0);
     array_copy(write, array, 6);
     return 0;
 }
@@ -127,7 +143,7 @@ int sps30_read_measured_values(unsigned char* buff) {
 //TODO: check if length is right
 int sps30_ask_cleaning_interval() {
     unsigned char array[] = {0x7E, 0x00, 0x80, 0x01, 0x00, 0x7D, 0x5E, 0x7E};
-    uart_write(uart_a0, array, 8);
+    uart_write(uart_a0, array, 8, 0);
     array_copy(write, array, 8);
     return 0;
 }
@@ -140,7 +156,7 @@ int sps30_read_cleaning_interval() {
 
 int sps30_start_fan_cleaning() {
     unsigned char array[] = {0x7E, 0x00, 0x56, 0x00, 0xA9, 0x7E};
-    uart_write(uart_a0, array, 6);
+    uart_write(uart_a0, array, 6, 0);
     array_copy(write, array, 6);
     return 0;
 }

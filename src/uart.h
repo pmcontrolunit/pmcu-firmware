@@ -59,7 +59,7 @@ typedef unsigned char uart_settings;
  */
 void uart_setup(uart_module module, uart_settings settings);
 
-int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length);
+int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length, unsigned int buffer_offset);
 
 int uart_write_str(uart_module module, unsigned char *str);
 
