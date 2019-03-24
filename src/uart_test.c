@@ -14,7 +14,7 @@ int main() {
 
     uart_setup(uart_a1, uart_baud_rate_9600);
     while (1) {
-        uart_write(uart_a1, "Type something: ", 16);
+        uart_write(uart_a1, "Type something: ", 16, 0);
 
         while (1) {
             uart_read(uart_a1, &byte, 1);
@@ -24,8 +24,8 @@ int main() {
             }
         }
 
-        uart_write(uart_a1, "You just wrote:\n", 16);
-        uart_write(uart_a1, message, i);
+        uart_write(uart_a1, "You just wrote:\n", 16, 0);
+        uart_write(uart_a1, message, i, 0);
         i = 0;
     }
 }

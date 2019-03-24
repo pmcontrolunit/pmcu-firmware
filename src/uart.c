@@ -61,7 +61,7 @@ int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_le
 int uart_write_str(uart_module module, unsigned char *str) {
     unsigned i = 0;
     while (str[i] != '\0') {
-        uart_write(module, &str[i++], 0, 1);
+        uart_write(module, &str[i++], 1, 0);
     }
     return 0;
 }
