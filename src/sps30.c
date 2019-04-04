@@ -44,6 +44,7 @@ int array_copy(unsigned char*, unsigned char*, int);
 unsigned char write[8];
 unsigned char read[47];
 
+/*
 unsigned char v_mass_PM1[4];
 unsigned char v_mass_PM2dot5[4];
 unsigned char v_mass_PM4[4];
@@ -54,6 +55,7 @@ unsigned char v_num_PM2dot5[4];
 unsigned char v_num_PM4[4];
 unsigned char v_num_PM10[4];
 unsigned char v_typical_size[4];
+
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
@@ -85,7 +87,8 @@ int main(void) {
     sps30_read_stop_ack(read);
 
     while(1);
-}
+}*/
+
 //COMMANDS
 
 int sps30_start_measurement() {
