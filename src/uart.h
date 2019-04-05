@@ -1,62 +1,65 @@
 #ifndef UART_H_
 #define UART_H_
 
-#include "circular_buffer.h"
-#include "stdint.h"
-#include "string.h"
-
 #include <msp430.h>
+#include "stdint.h"
 
-/* -------------
- * UART MODULES:
- * -------------
- * On MSP430F5529 there are 2 USCI modules: A0 and A1.
- * - A0 on UART mode, ends on 3.3 and 3.4 pins.
- * - A1 on UART mode ends on 4.4 and 4.5 pins, linked with USB serial.
+/*
+ * A type representing the UART module.
+ * On MSP430F5529 are available 2 USCI modules: A0 and A1.
+ * - A0 ends on 3.3 (TX) and 3.4 (RX) pins.
+ * - A1 ends on 4.4 (TX) and 4.5 (RX) pins.
  */
-typedef unsigned short uart_module;
+typedef uint16_t uart_module;
 
-#define uart_a0 0x05C0
-#define uart_a1 0x0600
+#define UART_A0 0x05C0
+#define UART_A1 0x0600
 
-#define uart_ctl1  0x00
-#define uart_ctl0  0x01
-#define uart_br0   0x06
-#define uart_br1   0x07
-#define uart_mctl  0x08
-#define uart_stat  0x0A
-#define uart_rxbuf 0x0C
-#define uart_txbuf 0x0E
-#define uart_abctl 0x10
-#define uart_rtctl 0x12
-#define uart_rrctl 0x13
-#define uart_ie    0x1C
-#define uart_ifg   0x1D
-#define uart_iv    0x1E
+#define UART_CTL1  0x00
+#define UART_CTL0  0x01
+#define UART_BR0   0x06
+#define UART_BR1   0x07
+#define UART_MCTL  0x08
+#define UART_STAT  0x0A
+#define UART_RXBUF 0x0C
+#define UART_TXBUF 0x0E
+#define UART_ABCTL 0x10
+#define UART_RTCTL 0x12
+#define UART_RRCTL 0x13
+#define UART_IE    0x1C
+#define UART_IFG   0x1D
+#define UART_IV    0x1E
 
-#define uart_register(module, offset) *((unsigned char *) module + offset)
+#define UART_REGISTER(module, offset) *((uint16_t *) module + offset)
 
-
-/* --------------
- * UART SETTINGS:
- * --------------
+/*
+ * A type representing the UART settings.
  * A single byte that contains all configurable parts of UART communication (matching with UCAxCTL0 register).
  * The last 3 bits (lsb) are used for baud-rate configuration.
  */
-typedef unsigned char uart_settings;
-typedef void (*uart_rx_listener)(char);
+typedef uint8_t uart_settings;
 
-#define uart_parity_enabled UCPEN
-#define uart_even_parity    UCPAR
-#define uart_msb_first      UCMSB
-#define uart_7bits_data     UC7BIT
-#define uart_stop_bit       UCSPB
+#define UART_PARITY_ENABLED UCPEN
+#define UART_EVEN_PARITY    UCPAR
+#define UART_MSB_FIRST      UCMSB
+#define UART_7BITS_DATA     UC7BIT
+#define UART_STOP_BIT       UCSPB
 
-#define uart_baud_rate_9600   0b000
+#define UART_BAUD_RATE_9600_SMCLK_1MHZ 0b000
+#define UART_BAUD_RATE_9600_ACLK_32KHZ 0b001
 
-#define uart_baud_rate_115200_32khz 0b100
-#define uart_baud_rate_115200_1mhz  0b101
-#define uart_baud_rate_115200_12mhz 0b110
+#define UART_BAUD_RATE_115200_SMCLK_12MHZ 0b100
+#define UART_BAUD_RATE_115200_SMCLK_1MHZ  0b101
+
+/*
+ * After how many seconds the function goes timeout for write operations.
+ */
+#define UART_WRITE_TIMEOUT 10
+
+/*
+ * After how many seconds the function goes timeout for read operations.
+ */
+#define UART_READ_TIMEOUT 10
 
 /*
  * Sets up the given UART module.
@@ -85,7 +88,7 @@ int uart_write_string(uart_module module, const uint8_t *string);
  * Reads a byte from the given UART module.
  * Returns the number of bytes read, 1 if success, 0 if timed out.
  */
-int uart_read(uart_module module, uint8_t *byte);
+int uart_read(uart_module module, uint8_t *byte, unsigned short timeout);
 
 /*
  * Reads a bytes buffer from the given UART module.
@@ -101,10 +104,17 @@ int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_le
 int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length);
 
 /*
- * Reads until it reaches the sample (included) from the UART module.
+ * Reads until it reaches the sample (included) from the given UART module.
  * If the buffer isn't enough to store the data, the first values will be replaced.
  * Returns the number of bytes read.
  */
 int uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length);
+
+/*
+ * Reads until it reaches the sample_string (included) from the given UART module.
+ * If the buffer isn't enough to store the data, the first values will be replaced.
+ * Returns the number of bytes read.
+ */
+int uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length);
 
 #endif
