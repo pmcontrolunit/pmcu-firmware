@@ -2,6 +2,9 @@
 #define UART_H_
 
 #include "circular_buffer.h"
+#include "stdint.h"
+#include "string.h"
+
 #include <msp430.h>
 
 /* -------------
@@ -33,6 +36,7 @@ typedef unsigned short uart_module;
 
 #define uart_register(module, offset) *((unsigned char *) module + offset)
 
+
 /* --------------
  * UART SETTINGS:
  * --------------
@@ -40,6 +44,7 @@ typedef unsigned short uart_module;
  * The last 3 bits (lsb) are used for baud-rate configuration.
  */
 typedef unsigned char uart_settings;
+typedef void (*uart_rx_listener)(char);
 
 #define uart_parity_enabled UCPEN
 #define uart_even_parity    UCPAR
@@ -54,17 +59,52 @@ typedef unsigned char uart_settings;
 #define uart_baud_rate_115200_12mhz 0b110
 
 /*
- * Applies the settings to the module, initialize read/write buffers and
- * sets up output pins.
+ * Sets up the given UART module.
  */
 void uart_setup(uart_module module, uart_settings settings);
 
-int uart_write(uart_module module, unsigned char *buffer, unsigned int buffer_length, unsigned int buffer_offset);
+/*
+ * Writes the byte out of the given UART module.
+ * Returns the number of byte written, 1 if success, 0 if timed out.
+ */
+int uart_write(uart_module module, uint8_t byte);
 
-int uart_write_str(uart_module module, unsigned char *str);
+/*
+ * Writes the bytes buffer out of the given UART module.
+ * Returns the number of bytes written, < of buffer_length if timed out.
+ */
+int uart_write_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length);
 
-int uart_read(uart_module module, unsigned char *buffer, unsigned int buffer_length);
+/*
+ * Writes the string out of the given UART module.
+ * Returns the number of bytes written, < of strlen(string) if timed out.
+ */
+int uart_write_string(uart_module module, const uint8_t *string);
 
-int uart_read_until(uart_module module, unsigned char *sample, unsigned int sample_length, unsigned char *buffer, unsigned int buffer_offset, unsigned int buffer_length);
+/*
+ * Reads a byte from the given UART module.
+ * Returns the number of bytes read, 1 if success, 0 if timed out.
+ */
+int uart_read(uart_module module, uint8_t *byte);
+
+/*
+ * Reads a bytes buffer from the given UART module.
+ * Returns the number of bytes read.
+ */
+int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length);
+
+/*
+ * Reads a line from the given UART module.
+ * Stops reading when it reaches a \r, a \n or both.
+ * Returns the number of bytes read.
+ */
+int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length);
+
+/*
+ * Reads until it reaches the sample (included) from the UART module.
+ * If the buffer isn't enough to store the data, the first values will be replaced.
+ * Returns the number of bytes read.
+ */
+int uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length);
 
 #endif
