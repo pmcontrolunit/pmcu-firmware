@@ -27,9 +27,10 @@ __interrupt void timer_b1_isr(void){
 
 }
 
+/*
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
     start_timing();
     while(1);
-}
+}*/
