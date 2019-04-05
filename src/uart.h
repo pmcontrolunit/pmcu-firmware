@@ -45,26 +45,31 @@ typedef uint8_t uart_settings;
 #define UART_7BITS_DATA     UC7BIT
 #define UART_STOP_BIT       UCSPB
 
-#define UART_BAUD_RATE_9600_SMCLK_1MHZ 0b000
-#define UART_BAUD_RATE_9600_ACLK_32KHZ 0b001
+#define UART_BAUD_RATE_9600_ACLK_32KHZ  0b000
+#define UART_BAUD_RATE_9600_SMCLK_1MHZ  0b001
+#define UART_BAUD_RATE_9600_SMCLK_12MHZ 0b010
 
 #define UART_BAUD_RATE_115200_SMCLK_12MHZ 0b100
 #define UART_BAUD_RATE_115200_SMCLK_1MHZ  0b101
 
 /*
- * After how many seconds the function goes timeout for write operations.
+ * An enum represeintg the UART errors.
  */
-#define UART_WRITE_TIMEOUT 10
+typedef enum {
+    UART_OK,
+    UART_TIMEOUT,
+} uart_error;
 
-/*
- * After how many seconds the function goes timeout for read operations.
- */
-#define UART_READ_TIMEOUT 10
+#define UART_WRITE_TIMEOUT 10
+#define UART_READ_TIMEOUT  10
+
 
 /*
  * Sets up the given UART module.
  */
 void uart_setup(uart_module module, uart_settings settings);
+
+
 
 /*
  * Writes the byte out of the given UART module.
@@ -88,18 +93,18 @@ int uart_write_string(uart_module module, const uint8_t *string);
  * Reads a byte from the given UART module.
  * Returns the number of bytes read, 1 if success, 0 if timed out.
  */
-int uart_read(uart_module module, uint8_t *byte, unsigned short timeout);
+int uart_read(uart_module module, uint8_t *byte);
 
 /*
  * Reads a bytes buffer from the given UART module.
- * Returns the number of bytes read.
+ * Returns the number of bytes read, if < of buffer_length it went timeout.
  */
 int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length);
 
 /*
  * Reads a line from the given UART module.
- * Stops reading when it reaches a \r, a \n or both.
- * Returns the number of bytes read.
+ * Stops reading when it reaches a \n or \r\n.
+ * Returns the number of bytes read, if the last isn't \0, it went timeout.
  */
 int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length);
 
