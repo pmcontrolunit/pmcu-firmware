@@ -32,17 +32,8 @@ void unlock(mqtt_pal_mutex_t* lock) {
     *lock = 0;
 }
 
-uint16_t invert_bits_order(uint16_t num) {
-    unsigned int  NO_OF_BITS = 16;
-    uint16_t reverse_num = 0, i, temp;
-
-    for (i = 0; i < NO_OF_BITS; i++) {
-        temp = (num & (1 << i));
-        if(temp)
-            reverse_num |= (1 << ((NO_OF_BITS - 1) - i));
-    }
-
-    return reverse_num;
+uint16_t invert_byte_order(uint16_t value) {
+    return (uint16_t)((value & 0xFFU) << 8 | (value & 0xFF00U) >> 8);
 
 }
 

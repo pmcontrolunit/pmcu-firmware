@@ -114,14 +114,14 @@ typedef int mqtt_pal_socket_handle;
 #define MQTT_PAL_MUTEX_INIT(mtx_ptr) *mtx_ptr = 0
 #define MQTT_PAL_MUTEX_LOCK(mtx_ptr) lock(mtx_ptr)
 #define MQTT_PAL_MUTEX_UNLOCK(mtx_ptr) unlock(mtx_ptr)
-#define MQTT_PAL_HTONS(s) invert_bits_order(s)
-#define MQTT_PAL_NTOHS(s) invert_bits_order(s)
+#define MQTT_PAL_HTONS(s) invert_byte_order(s)
+#define MQTT_PAL_NTOHS(s) invert_byte_order(s)
 
 void lock(mqtt_pal_mutex_t* lock);
 
 void unlock(mqtt_pal_mutex_t* lock);
 
-uint16_t invert_bits_order(uint16_t n);
+uint16_t invert_byte_order(uint16_t value);
 
 /**
  * @brief Sends all the bytes in a buffer.
