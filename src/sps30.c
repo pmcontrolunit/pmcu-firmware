@@ -96,19 +96,19 @@ int main(void) {
 
 int sps30_start_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x00, 0x02, 0x01, 0x03, 0xF9, 0x7E};
-    uart_write(uart_a0, array, 8, 0);
+    uart_write_buffer(uart_a0, array, 8);
     array_copy(write, array, 8);
     return 0;
 }
 
 int sps30_read_start_ack(unsigned char* buff) {
-    uart_read(uart_a0, read, 7);
+    uart_read_buffer(uart_a0, read, 7);
     return 0;
 }
 
 int sps30_stop_measurement() {
     unsigned char array[] = {0x7E, 0x00, 0x01, 0x00, 0xFE, 0x7E};
-    uart_write(uart_a0, array, 6, 0);
+    uart_write_buffer(uart_a0, array, 6);
     array_copy(write, array, 6);
     return 0;
 }
@@ -120,39 +120,39 @@ int sps30_read_stop_ack(unsigned char* buff) {
 
 int sps30_ask_measured_values() {
     unsigned char array[] = {0x7E, 0x00, 0x03, 0x00, 0xFC, 0x7E};
-    uart_write(uart_a0, array, 6, 0);
+    uart_write_buffer(uart_a0, array, 6);
     array_copy(write, array, 6);
     return 0;
 }
 
 int sps30_read_measured_values(unsigned char* buff) {
-    uart_read(uart_a0, buff, 47);
+    uart_read_buffer(uart_a0, buff, 47);
     return 0;
 }
 
 //TODO: check if length is right
 int sps30_ask_cleaning_interval() {
     unsigned char array[] = {0x7E, 0x00, 0x80, 0x01, 0x00, 0x7D, 0x5E, 0x7E};
-    uart_write(uart_a0, array, 8, 0);
+    uart_write_buffer(uart_a0, array, 8);
     array_copy(write, array, 8);
     return 0;
 }
 
 int sps30_read_cleaning_interval() {
     unsigned char array[11];
-    uart_read(uart_a0, array, 11);
+    uart_read_buffer(uart_a0, array, 11);
     return 0;
 }
 
 int sps30_start_fan_cleaning() {
     unsigned char array[] = {0x7E, 0x00, 0x56, 0x00, 0xA9, 0x7E};
-    uart_write(uart_a0, array, 6, 0);
+    uart_write_buffer(uart_a0, array, 6);
     array_copy(write, array, 6);
     return 0;
 }
 
 int sps30_read_fan_ack(unsigned char* buff) {
-    uart_read(uart_a0, buff, 7);
+    uart_read_buffer(uart_a0, buff, 7);
     return 0;
 }
 
