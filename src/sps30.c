@@ -44,6 +44,7 @@ int array_copy(unsigned char*, unsigned char*, int);
 unsigned char write[8];
 unsigned char read[47];
 
+/*
 unsigned char v_mass_PM1[4];
 unsigned char v_mass_PM2dot5[4];
 unsigned char v_mass_PM4[4];
@@ -54,18 +55,6 @@ unsigned char v_num_PM2dot5[4];
 unsigned char v_num_PM4[4];
 unsigned char v_num_PM10[4];
 unsigned char v_typical_size[4];
-
-void init_12mhz_mclk() {
-    UCSCTL3 |= SELREF_2;
-
-    __bis_SR_register(SCG0);
-    UCSCTL0 = 0x0000;
-    UCSCTL1 = DCORSEL_5;
-    UCSCTL2 = FLLD_1 + 374;
-    __bic_SR_register(SCG0);
-
-    __delay_cycles(375000);
-}
 
 
 int main(void) {
@@ -101,7 +90,8 @@ int main(void) {
     sps30_read_stop_ack(read);
 
     while(1);
-}
+}*/
+
 //COMMANDS
 
 int sps30_start_measurement() {
