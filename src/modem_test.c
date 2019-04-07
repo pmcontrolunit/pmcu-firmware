@@ -24,8 +24,8 @@ int main () {
 
     __bis_SR_register(GIE);
 
-    uart_setup(uart_a0, uart_baud_rate_115200_12mhz);
-    uart_setup(uart_a1, uart_baud_rate_115200_12mhz);
+    uart_setup(UART_A0, UART_BAUD_RATE_115200_SMCLK_12MHZ);
+    uart_setup(UART_A1, UART_BAUD_RATE_115200_SMCLK_12MHZ);
 
     __bis_SR_register(LPM0_bits);
 

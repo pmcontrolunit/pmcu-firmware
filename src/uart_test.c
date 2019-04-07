@@ -1,6 +1,7 @@
 #include <msp430.h>
 #include "uart.h"
 
+/*
 int main() {
     unsigned char message[256];
 
@@ -17,4 +18,5 @@ int main() {
         uart_write_string(UART_A1, "\r\n");
     }
 }
+*/
 
