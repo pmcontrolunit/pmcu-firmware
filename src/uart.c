@@ -144,7 +144,7 @@ int uart_write(uart_module module, uint8_t byte) {
     }
 }
 
-int uart_write_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length) {
+int uart_write_buffer(uart_module module, const uint8_t *buffer, unsigned int buffer_length) {
     unsigned int i;
     for (i = 0; i < buffer_length; i++) {
         uart_write(module, buffer[i]);
@@ -198,83 +198,84 @@ int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_le
     return i;
 }
 
-int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout) {
+void uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout) {
     unsigned int i;
-    for (i = 0; i < buffer_length;) {
+    uint8_t fallback;
+    if (buffer == NULL) {
+        buffer = &fallback;
+        buffer_length = 1;
+    }
+    i = 0;
+    while (1) {
         uart_read(module, &buffer[i], timeout);
         if (result != UART_OK) {
-            break;
+            return i;
         }
-        switch (buffer[i]) {
-        // If it's a \n replaces it with a \0 and returns
-        case '\n':
+        if (buffer[i] == '\n') {
             buffer[i] = '\0';
             break;
-        // If it's a \r skips without saving it
-        case '\r':
+        } else if (buffer[i] == '\r') {
             continue;
-        // For any character increments
-        default:
-            i++;
+        } else {
+            i = (i + 1 >= buffer_length) ? 0 : (i + 1);
         }
     }
-    // Returns the number of the bytes read
-    return i + 1;
 }
 
-int uart_read_input(uart_module module, uint8_t *buffer, unsigned int buffer_length) {
+void uart_read_input(uart_module module, uint8_t *buffer, unsigned int buffer_length) {
     unsigned int i;
-    for (i = 0; i < buffer_length; i++) {
+    uint8_t fallback;
+    if (buffer == NULL) {
+        buffer = &fallback;
+        buffer_length = 1;
+    }
+    i = 0;
+    while (1) {
         uart_read(module, &buffer[i], 0);
+        if (result != UART_OK) {
+            return;
+        }
         if (buffer[i] == '\r') {
             buffer[i] = '\0';
             break;
         }
+        i = (i + 1 >= buffer_length) ? 0 : (i + 1);
     }
-    return i;
 }
 
-int uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout) {
-    unsigned int sample_i = 0;
-    unsigned int buffer_i = 0;
-    uint8_t fallback = 0;
-
-    // If buffer isn't defined points to 1 byte
+void uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout) {
+    unsigned int i, j;
+    uint8_t fallback;
     if (!buffer) {
        buffer = &fallback;
        buffer_length = 1;
     }
-
+    i = 0;
+    j = 0;
     while (1) {
-       uart_read(module, &buffer[buffer_i], timeout);
-       if (uart_get_result() != UART_OK) {
+       uart_read(module, &buffer[i], timeout);
+       if (result != UART_OK) {
            break;
        }
-
-       if (buffer[buffer_i] == sample[sample_i]) {
-           sample_i++;
-       } else if (sample_i > 0) {
-           sample_i = 0;
+       if (buffer[i] == sample[j]) {
+           j++;
+       } else if (j > 0) {
+           j = 0;
        }
-
-       if (sample_i == sample_length) {
+       if (j == sample_length) {
            break;
        }
-
-       // Goes back to 0 if reaches the limit
-       buffer_i = ++buffer_i >= buffer_length ? buffer_i : 0;
+       i = (i + 1) >= buffer_length ? 0 : i;
     }
-    return buffer_i + 1;
 }
 
-inline int uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout) {
-    return uart_read_until(module, sample_string, strlen(sample_string), buffer, buffer_length, timeout);
+inline void uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout) {
+    uart_read_until(module, sample_string, strlen(sample_string), buffer, buffer_length, timeout);
 }
 
 #pragma vector=USCI_A0_VECTOR
 __interrupt void on_uart_a0() {
     if (UCA0IFG & UCRXIFG) {
-        // If buffer is empty, a read could be waiting, so we remove LPM0
         if (circular_buffer_is_empty(&read_buffer_a0)) {
             __bic_SR_register_on_exit(LPM0_bits);
         }
@@ -291,6 +292,9 @@ __interrupt void on_uart_a0() {
 #pragma vector=USCI_A1_VECTOR
 __interrupt void on_uart_a1() {
     if (UCA1IFG & UCRXIFG) {
+        if (circular_buffer_is_empty(&read_buffer_a1)) {
+            __bic_SR_register_on_exit(LPM0_bits);
+        }
         circular_buffer_write(&read_buffer_a1, UCA1RXBUF);
     }
 
@@ -305,4 +309,3 @@ __interrupt void on_uart_a1() {
 __interrupt void on_rx_timeout() {
     __bic_SR_register_on_exit(LPM0_bits);
 }
-

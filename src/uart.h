@@ -2,7 +2,9 @@
 #define UART_H_
 
 #include <msp430.h>
-#include "stdint.h"
+
+#include <stdlib.h>
+#include <stdint.h>
 
 /*
  * A type representing the UART module.
@@ -80,7 +82,7 @@ int uart_write(uart_module module, uint8_t byte);
  * Writes the bytes buffer out of the given UART module.
  * Returns the number of bytes written, < of buffer_length if timed out.
  */
-int uart_write_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length);
+int uart_write_buffer(uart_module module, const uint8_t *buffer, unsigned int buffer_length);
 
 /*
  * Writes the string out of the given UART module.
@@ -105,24 +107,22 @@ int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_le
  * Stops reading when it reaches a \n or \r\n.
  * Returns the number of bytes read, if the last isn't \0, it went timeout.
  */
-int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
+void uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
 
-int uart_read_input(uart_module module, uint8_t *buffer, unsigned int buffer_length);
+void uart_read_input(uart_module module, uint8_t *buffer, unsigned int buffer_length);
 
 /*
  * Reads until it reaches the sample (included) from the given UART module.
  * If the buffer isn't enough to store the data, the first values will be replaced.
  * Returns the number of bytes read.
  */
-int uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
+void uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
 
 /*
  * Reads until it reaches the sample_string (included) from the given UART module.
  * If the buffer isn't enough to store the data, the first values will be replaced.
  * Returns the number of bytes read.
  */
-int uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
-
-#define uart_watch(...)
+void uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
 
 #endif
