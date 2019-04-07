@@ -1,12 +1,11 @@
 #include "circular_buffer.h"
 #include <stdlib.h>
 
-void circular_buffer_init(circular_buffer *buffer, unsigned int size) {
+void circular_buffer_init(circular_buffer *buffer) {
     buffer->count = 0;
     buffer->write_position = 0;
     buffer->read_position = 0;
-    buffer->size = size;
-    buffer->data = (unsigned char *) malloc(size * sizeof(unsigned char));
+    buffer->size = CIRCULAR_BUFFER_MAX_SIZE;
 }
 
 int circular_buffer_is_empty(circular_buffer *buffer) {
@@ -28,7 +27,7 @@ int circular_buffer_write(circular_buffer *buffer, unsigned char element) {
 }
 
 int circular_buffer_read(circular_buffer *buffer, unsigned char *element) {
-    if (buffer->count > buffer->size) {
+    if (buffer->count > 0) {
         buffer->count--;
         *element = buffer->data[buffer->read_position];
         buffer->read_position = ++buffer->read_position < buffer->size ? buffer->read_position : 0;

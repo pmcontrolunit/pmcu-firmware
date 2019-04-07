@@ -30,7 +30,7 @@ typedef uint16_t uart_module;
 #define UART_IFG   0x1D
 #define UART_IV    0x1E
 
-#define UART_REGISTER(module, offset) *((uint16_t *) module + offset)
+#define UART_REGISTER(module, offset) *((volatile unsigned char *) (module + offset))
 
 /*
  * A type representing the UART settings.
@@ -52,24 +52,23 @@ typedef uint8_t uart_settings;
 #define UART_BAUD_RATE_115200_SMCLK_12MHZ 0b100
 #define UART_BAUD_RATE_115200_SMCLK_1MHZ  0b101
 
-/*
- * An enum represeintg the UART errors.
- */
-typedef enum {
-    UART_OK,
-    UART_TIMEOUT,
-} uart_error;
-
 #define UART_WRITE_TIMEOUT 10
 #define UART_READ_TIMEOUT  10
 
+typedef enum {
+    UART_OK,
+    UART_TIMEOUT
+} uart_result;
 
 /*
  * Sets up the given UART module.
  */
 void uart_setup(uart_module module, uart_settings settings);
 
-
+/*
+ * Gets the latest operation result.
+ */
+uart_result uart_get_result();
 
 /*
  * Writes the byte out of the given UART module.
@@ -121,5 +120,7 @@ int uart_read_until(uart_module module, const uint8_t *sample, unsigned int samp
  * Returns the number of bytes read.
  */
 int uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length);
+
+#define uart_watch(...)
 
 #endif
