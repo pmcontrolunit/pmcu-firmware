@@ -92,34 +92,36 @@ int uart_write_string(uart_module module, const uint8_t *string);
  * Reads a byte from the given UART module.
  * Returns the number of bytes read, 1 if success, 0 if timed out.
  */
-int uart_read(uart_module module, uint8_t *byte);
+int uart_read(uart_module module, uint8_t *byte, unsigned int timeout);
 
 /*
  * Reads a bytes buffer from the given UART module.
  * Returns the number of bytes read, if < of buffer_length it went timeout.
  */
-int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length);
+int uart_read_buffer(uart_module module, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
 
 /*
  * Reads a line from the given UART module.
  * Stops reading when it reaches a \n or \r\n.
  * Returns the number of bytes read, if the last isn't \0, it went timeout.
  */
-int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length);
+int uart_read_line(uart_module module, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
+
+int uart_read_input(uart_module module, uint8_t *buffer, unsigned int buffer_length);
 
 /*
  * Reads until it reaches the sample (included) from the given UART module.
  * If the buffer isn't enough to store the data, the first values will be replaced.
  * Returns the number of bytes read.
  */
-int uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length);
+int uart_read_until(uart_module module, const uint8_t *sample, unsigned int sample_length, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
 
 /*
  * Reads until it reaches the sample_string (included) from the given UART module.
  * If the buffer isn't enough to store the data, the first values will be replaced.
  * Returns the number of bytes read.
  */
-int uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length);
+int uart_read_until_string(uart_module module, const char *sample_string, uint8_t *buffer, unsigned int buffer_length, unsigned int timeout);
 
 #define uart_watch(...)
 

@@ -12,12 +12,9 @@ int main() {
 
     while (1) {
         uart_write_string(UART_A1, "Type something:\r\n");
-
-        unsigned int size = uart_read_line(UART_A1, message, 256);
-        message[size] = '\0';
-
-        uart_write_string(UART_A1, "You wrote: ");
+        uart_read_input(UART_A1, message, 256);
         uart_write_string(UART_A1, message);
+        uart_write_string(UART_A1, "\r\n");
     }
 }
 
