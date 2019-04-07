@@ -39,6 +39,8 @@
 #define START_BYTE 0x7E
 #define STOP_BYTE 0x7E
 
+#define SPS30_READ_TIMEOUT 1000
+
 int array_copy(unsigned char*, unsigned char*, int);
 
 unsigned char write[8];
@@ -102,7 +104,7 @@ int sps30_start_measurement() {
 }
 
 int sps30_read_start_ack(unsigned char* buff) {
-    uart_read_buffer(UART_A0, read, 7);
+    uart_read_buffer(UART_A0, read, 7, SPS30_READ_TIMEOUT);
     return 0;
 }
 
@@ -126,7 +128,7 @@ int sps30_ask_measured_values() {
 }
 
 int sps30_read_measured_values(unsigned char* buff) {
-    uart_read_buffer(UART_A0, buff, 47);
+    uart_read_buffer(UART_A0, buff, 47, SPS30_READ_TIMEOUT);
     return 0;
 }
 
@@ -140,7 +142,7 @@ int sps30_ask_cleaning_interval() {
 
 int sps30_read_cleaning_interval() {
     unsigned char array[11];
-    uart_read_buffer(UART_A0, array, 11);
+    uart_read_buffer(UART_A0, array, 11, SPS30_READ_TIMEOUT);
     return 0;
 }
 
@@ -152,7 +154,7 @@ int sps30_start_fan_cleaning() {
 }
 
 int sps30_read_fan_ack(unsigned char* buff) {
-    uart_read_buffer(UART_A0, buff, 7);
+    uart_read_buffer(UART_A0, buff, 7, SPS30_READ_TIMEOUT);
     return 0;
 }
 
