@@ -4,6 +4,10 @@
 
 #include <string.h>
 
+#define SIM800L_LOG_MAX_SIZE 256
+
+uint8_t sim800l_latest_log[SIM800L_LOG_MAX_SIZE];
+
 void sim800l_write_command(const uint8_t *command) {
     uart_write_string(UART_A0, command);
     uart_write_string(UART_A0, "\r");
@@ -19,112 +23,131 @@ inline void sim800l_read_echoed_response(uint8_t *buffer, unsigned int buffer_le
     sim800l_read_response(buffer, buffer_length);
 }
 
-int modem_init() {
-    uint8_t response[256];
-
-    uart_setup(UART_A0, UART_BAUD_RATE_9600_SMCLK_1MHZ);
-
-    // Resets to default configuration
+int sim800l_init() {
     sim800l_write_command("ATZ");
     uart_read_until_string(UART_A0, "OK\r\n", NULL, NULL, 0);
 
-    // No echoes
     sim800l_write_command("ATE0");
-    sim800l_read_echoed_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 1;
+    sim800l_read_echoed_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
 
-    // Verbose mode for errors
     sim800l_write_command("AT+CMEE=2");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 2;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
 
-    // Deactivates GPRS PDP context
+    sim800l_write_command("AT+CIPSPRT=1");
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
+    }
+
+    return MODEM_OK;
+}
+
+int sim800l_gprs_shut() {
     sim800l_write_command("AT+CIPSHUT");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "SHUT OK") != 0) {
-        return 3;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "SHUT OK") != 0) {
+        return MODEM_ERROR;
+    }
+    return MODEM_OK;
+}
+
+int sim800l_gprs_init() {
+    if (sim800l_gprs_shut()) {
+        return MODEM_ERROR;
     }
 
-    // Single IP connection
     sim800l_write_command("AT+CIPMUX=0");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 4;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
 
-    // Attaches GPRS service
     sim800l_write_command("AT+CGATT=1");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 5;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
 
-    // Starts task and set APN, username and password
     sim800l_write_command("AT+CSTT=\"TM\",\"\",\"\"");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 6;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
 
-    // Brings up wireless connection with GPRS
     sim800l_write_command("AT+CIICR");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 7;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
 
-    // Gets the local IP address (needed to connect)
     sim800l_write_command("AT+CIFSR");
-    sim800l_read_response(response, 256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 7;
-    }
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
 
-    // Removes send data prompt
-    sim800l_write_command("AT+CIPSPRT=2");
-    sim800l_read_response(response,256);
-    if (strcmp((const char *) response, "OK") != 0) {
-        return 8;
-    }
+    return MODEM_OK;
+}
 
-    return 0;
+const char *modem_get_latest_log() {
+    return (const char *) sim800l_latest_log;
+}
+
+int modem_init() {
+    uart_setup(UART_A0, UART_BAUD_RATE_9600_SMCLK_1MHZ);
+
+    if (sim800l_init() == MODEM_ERROR) {
+        return MODEM_ERROR;
+    }
+    if (sim800l_gprs_init() == MODEM_ERROR) {
+        return MODEM_ERROR;
+    }
+    return MODEM_OK;
 }
 
 int modem_connect(const char *host, const char *port) {
-    uint8_t buffer[256];
-    strcpy((const char *) buffer, "AT+CIPSTART=\"TCP\",\"");
-    strcat((const char *) buffer, host);
-    strcat((const char *) buffer, "\",");
-    strcat((const char *) buffer, port);
+    strcpy((const char *) sim800l_latest_log, "AT+CIPSTART=\"TCP\",\"");
+    strcat((const char *) sim800l_latest_log, host);
+    strcat((const char *) sim800l_latest_log, "\",\"");
+    strcat((const char *) sim800l_latest_log, port);
+    strcat((const char *) sim800l_latest_log, "\"");
 
-    sim800l_write_command((const uint8_t *) buffer);
-    sim800l_read_response(buffer, 256);
-    if (strcmp((const char *) buffer, "OK") != 0) {
-        return 1;
+    sim800l_write_command((const uint8_t *) sim800l_latest_log);
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "OK") != 0) {
+        return MODEM_ERROR;
     }
-    sim800l_read_response(buffer, 256);
-    if (strcmp((const char *) buffer, "CONNECT OK") != 0) {
-        return 2;
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "CONNECT OK") != 0) {
+        return MODEM_ERROR;
     }
-    return 0;
+
+    return MODEM_OK;
 }
 
-int modem_sendall(void *fd, const void *buffer, unsigned int buffer_length, int flags) {
-    static const uint8_t exit_sequence[2] = {0x1A, 0x1A};
-    uint8_t response[256];
-
+int modem_send(void *fd, const void *buffer, unsigned int buffer_length, int flags) {
     sim800l_write_command("AT+CIPSEND");
+    uart_read_until_string(UART_A0, "> ", NULL, NULL, 0);
+
     uart_write_buffer(UART_A0, buffer, buffer_length);
-    uart_write_buffer(UART_A0, exit_sequence, 2);
+    uart_write(UART_A0, 0x1a);
 
-    uart_read_buffer(UART_A0, response, 256, 0);
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "SEND OK") != 0) {
+        return MODEM_ERROR;
+    }
 
-    return 0;
+    return MODEM_OK;
 }
 
-int modem_recvall(void *fd, void *buffer, unsigned int buffer_length, int flags) {
+int modem_disconnect() {
+    sim800l_write_command("AT+CIPSHUT");
+    sim800l_read_response(sim800l_latest_log, SIM800L_LOG_MAX_SIZE);
+    if (strcmp((const char *) sim800l_latest_log, "SHUT OK") != 0) {
+        return MODEM_ERROR;
+    }
+    return 0;
 }
