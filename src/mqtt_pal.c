@@ -25,11 +25,13 @@ SOFTWARE.
 #include "mqtt.h"
 
 void lock(mqtt_pal_mutex_t* lock) {
-    *lock = 1;
+    //*lock = 1;
+    return;
 }
 
 void unlock(mqtt_pal_mutex_t* lock) {
-    *lock = 0;
+    //*lock = 0;
+    return;
 }
 
 uint16_t invert_byte_order(uint16_t value) {
