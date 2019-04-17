@@ -43,10 +43,7 @@ uint16_t invert_byte_order(uint16_t value) {
 }
 
 ssize_t mqtt_pal_sendall(mqtt_pal_socket_handle fd, const void* buf, size_t len, int flags) {
-    if(!modem_send(&fd, buf, len, flags))
-        return len;
-    else
-        return MQTT_ERROR_SEND_BUFFER_IS_FULL;
+    modem_send(&fd, buf, len, flags);
 }
 
 ssize_t mqtt_pal_recvall(mqtt_pal_socket_handle fd, void* buf, size_t bufsz, int flags) {

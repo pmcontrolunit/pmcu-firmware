@@ -52,9 +52,10 @@ enum MQTTErrors mqtt_sync(struct mqtt_client *client) {
         if (err != MQTT_OK) return err;
     }
 
-    /* Call receive */
+    /* Call receive
     err = __mqtt_recv(client);
     if (err != MQTT_OK) return err;
+    */
 
     /* Call send */
     err = __mqtt_send(client);
@@ -1017,7 +1018,7 @@ ssize_t mqtt_pack_fixed_header(uint8_t *buf, size_t bufsz, const struct mqtt_fix
     remaining_length = fixed_header->remaining_length;
 
     /* MQTT spec (2.2.3) says maximum remaining length is 2^28-1 */
-    if(remaining_length >= 256*1024*1024)
+    if (remaining_length >= ((uint32_t) 256*1024*1024))
         return MQTT_ERROR_INVALID_REMAINING_LENGTH;
 
     do {
