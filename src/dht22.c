@@ -111,6 +111,7 @@ unsigned int dht22_read() {
     return latest_error;
 }
 
+
 #pragma vector=TIMER0_A1_VECTOR
 __interrupt void timera0_cc1_isr (void) {
     TA0CCTL1 &= ~CCIFG;
@@ -139,3 +140,4 @@ __interrupt void timera0_cc1_isr (void) {
         break;
     }
 }
+
