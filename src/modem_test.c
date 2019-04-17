@@ -1,11 +1,15 @@
 #include <msp430.h>
 #include "uart.h"
+#include "uart_hub.h"
 
 /*
 int main () {
     WDTCTL = WDTPW | WDTHOLD;
 
     __bis_SR_register(GIE);
+
+    uart_hub_init();
+    uart_hub_select(1);
 
     uart_setup(UART_A0, UART_BAUD_RATE_9600_SMCLK_1MHZ);
     uart_setup(UART_A1, UART_BAUD_RATE_9600_SMCLK_1MHZ);

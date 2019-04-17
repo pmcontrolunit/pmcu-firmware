@@ -273,6 +273,7 @@ inline void uart_read_until_string(uart_module module, const char *sample_string
     uart_read_until(module, sample_string, strlen(sample_string), buffer, buffer_length, timeout);
 }
 
+/*
 #pragma vector=USCI_A0_VECTOR
 __interrupt void on_uart_a0() {
     if (UCA0IFG & UCRXIFG) {
@@ -309,3 +310,4 @@ __interrupt void on_uart_a1() {
 __interrupt void on_rx_timeout() {
     __bic_SR_register_on_exit(LPM0_bits);
 }
+*/
